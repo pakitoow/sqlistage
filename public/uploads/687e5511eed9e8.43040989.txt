@@ -1,0 +1,9 @@
+[2025-07-14 10:12:01] INFO  User logged in successfully
+[2025-07-14 10:12:05] DEBUG Fetching user settings
+[2025-07-14 10:12:07] WARNING Disk space is running low
+[2025-07-14 10:12:10] ERROR  Unable to connect to the database
+[2025-07-14 10:12:12] CRITICAL System failure – shutting down!
+[2025-07-14 10:12:13] INFO  User logged out
+[2025-07-14 10:12:14] DEBUG Session cleanup complete
+[2025-07-14 10:12:15] NOTICE This is a less important log message
+[2025-07-14 10:12:16] ERROR  File not found: /var/www/html/index.php

@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>User Dashboard - Log Information</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3f37c9;
+            --accent-color: #4cc9f0;
+            --dark-color: #1a1a2e;
+            --light-color: #f8f9fa;
+            --success-color: #4caf50;
+            --danger-color: #f44336;
+            --warning-color: #ff9800;
+            --info-color: #2196f3;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+            min-height: 100vh;
+            color: var(--dark-color);
+        }
+
+        .container {
+            max-width: 1400px;
+            padding: 2rem;
+        }
+
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            overflow: hidden;
+            background: white;
+            margin-bottom: 2rem;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border-bottom: none;
+            padding: 1.25rem 1.5rem;
+            border-radius: 12px 12px 0 0 !important;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-weight: 600;
+        }
+
+        h1 {
+            color: var(--dark-color);
+            position: relative;
+            padding-bottom: 1rem;
+            font-size: 2.5rem;
+        }
+
+        h1:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 80px;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+            border-radius: 2px;
+        }
+
+        .badge-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        }
+
+        .log-message {
+            word-break: break-word;
+        }
+
+        .log-datetime {
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            white-space: nowrap;
+        }
+
+        .stats-card {
+            border-left: 4px solid var(--primary-color);
+            background: white;
+        }
+
+        /* Log level colors */
+        .log-INFO { background-color: rgba(23, 162, 184, 0.1); }
+        .log-WARNING { background-color: rgba(255, 193, 7, 0.1); }
+        .log-ERROR, .log-CRITICAL { background-color: rgba(220, 53, 69, 0.1); }
+        .log-DEBUG { background-color: rgba(108, 117, 125, 0.1); }
+
+        .badge-INFO { background: linear-gradient(135deg, #17a2b8, #1fc8e3); }
+        .badge-WARNING { background: linear-gradient(135deg, #ffc107, #ffab00); color: #212529; }
+        .badge-ERROR { background: linear-gradient(135deg, #dc3545, #ff3d4a); }
+        .badge-CRITICAL { background: linear-gradient(135deg, #dc3545, #c82333); }
+        .badge-DEBUG { background: linear-gradient(135deg, #6c757d, #5a6268); }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(var(--primary-color), var(--secondary-color));
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--secondary-color);
+        }
+
+        /* Table styling */
+        #logsTable {
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        #logsTable thead th {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border: none;
+            padding: 1rem;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        #logsTable tbody tr {
+            transition: all 0.2s ease;
+        }
+
+        #logsTable tbody tr:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .card-body {
+                padding: 1rem;
+            }
+        }
+
+        /* Loading spinner */
+        .spinner-border {
+            width: 1.5rem;
+            height: 1.5rem;
+            border-width: 0.2em;
+        }
+
+        /* Floating animation */
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        .floating {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        /* Notification badge */
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background-color: var(--danger-color);
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+        }
+
+        /* Detail view modal */
+        .log-detail-modal .modal-content {
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .log-detail-modal .modal-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+        }
+
+        .log-detail-content {
+            font-family: 'Courier New', monospace;
+            background-color: #f8f9fa;
+            padding: 1rem;
+            border-radius: 6px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body class="bg-light">
+<div class="container mt-4 animate__animated animate__fadeIn">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div class="d-flex align-items-center">
+            <div class="me-3">
+                <i class="fas fa-user-shield fa-3x text-primary floating"></i>
+            </div>
+            <div>
+                <h1 class="mb-0">Log Information Dashboard</h1>
+                <p class="text-muted mb-0">View log information shared with you</p>
+            </div>
+        </div>
+        <div class="position-relative">
+            <button class="btn btn-primary" id="refreshBtn">
+                <i class="fas fa-sync-alt me-1"></i> Refresh
+            </button>
+            <span class="notification-badge" id="newLogsBadge" style="display: none;">3</span>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4 animate__animated animate__fadeInUp">
+        <div class="col-md-3">
+            <div class="card stats-card h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-primary rounded-circle me-3 p-3">
+                            <i class="fas fa-file-alt fa-2x text-white"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-1">Total Logs</h6>
+                            <h3 class="mb-0" id="totalLogsCount">0</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stats-card h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-warning rounded-circle me-3 p-3">
+                            <i class="fas fa-exclamation-triangle fa-2x text-white"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-1">Critical Logs</h6>
+                            <h3 class="mb-0" id="criticalLogsCount">0</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stats-card h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-success rounded-circle me-3 p-3">
+                            <i class="fas fa-check-circle fa-2x text-white"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-1">Viewed</h6>
+                            <h3 class="mb-0" id="viewedLogsCount">0</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stats-card h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-info rounded-circle me-3 p-3">
+                            <i class="fas fa-clock fa-2x text-white"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-1">Recent (7d)</h6>
+                            <h3 class="mb-0" id="recentLogsCount">0</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Card -->
+    <div class="card mb-3 animate__animated animate__fadeInUp">
+        <div class="card-body p-3">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6 class="card-title mb-2 d-flex align-items-center">
+                        <i class="fas fa-sliders-h me-2 text-primary"></i>Filter Logs
+                    </h6>
+                    <div class="filter-buttons mb-3">
+                        <button class="btn btn-outline-secondary btn-sm active" data-level="all">
+                            <i class="fas fa-layer-group me-1"></i> All Logs
+                        </button>
+                        <button class="btn btn-outline-INFO btn-sm" data-level="INFO">
+                            <i class="fas fa-info-circle me-1"></i> Info
+                        </button>
+                        <button class="btn btn-outline-WARNING btn-sm" data-level="WARNING">
+                            <i class="fas fa-exclamation-triangle me-1"></i> Warning
+                        </button>
+                        <button class="btn btn-outline-ERROR btn-sm" data-level="ERROR">
+                            <i class="fas fa-times-circle me-1"></i> Error
+                        </button>
+                        <button class="btn btn-outline-CRITICAL btn-sm" data-level="CRITICAL">
+                            <i class="fas fa-skull me-1"></i> Critical
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="card-title mb-2 d-flex align-items-center">
+                        <i class="fas fa-filter me-2 text-primary"></i>Additional Filters
+                    </h6>
+                    <div class="d-flex">
+                        <div class="me-3">
+                            <select class="form-select form-select-sm" id="statusFilter">
+                                <option value="all">All Statuses</option>
+                                <option value="unread">Unread Only</option>
+                                <option value="read">Read Only</option>
+                            </select>
+                        </div>
+                        <div>
+                            <select class="form-select form-select-sm" id="timeFilter">
+                                <option value="all">All Time</option>
+                                <option value="today">Today</option>
+                                <option value="week">This Week</option>
+                                <option value="month">This Month</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logs Table -->
+    <div class="card animate__animated animate__fadeInUp">
+        <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-list-ol me-2"></i>Received Log Information
+                </h5>
+                <div class="text-muted small">
+                    Showing <span id="filteredCount">0</span> records
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table id="logsTable" class="table table-hover mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th class="ps-4">ID</th>
+                            <th>Received</th>
+                            <th>From</th>
+                            <th>Level</th>
+                            <th>Message Preview</th>
+                            <th class="pe-4">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Data will be loaded dynamically -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Log Detail Modal -->
+<div class="modal fade log-detail-modal" id="logDetailModal" tabindex="-1" aria-labelledby="logDetailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="logDetailModalLabel">Log Details</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <div class="mb-2">
+                            <strong>Log ID:</strong>
+                            <span id="detail-log-id">N/A</span>
+                        </div>
+                        <div class="mb-2">
+                            <strong>Received:</strong>
+                            <span id="detail-received">N/A</span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-2">
+                            <strong>From:</strong>
+                            <span id="detail-sender">N/A</span>
+                        </div>
+                        <div class="mb-2">
+                            <strong>Status:</strong>
+                            <span id="detail-status" class="badge bg-secondary">N/A</span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-2">
+                            <strong>Level:</strong>
+                            <span id="detail-level" class="badge">N/A</span>
+                        </div>
+                        <div class="mb-2">
+                            <strong>Original Date:</strong>
+                            <span id="detail-original-date">N/A</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <h6>Log Message</h6>
+                    <div class="log-detail-content" id="detail-message">
+                        Loading message...
+                    </div>
+                </div>
+                
+                <div class="mb-3" id="detail-notes-container">
+                    <h6>Admin Notes</h6>
+                    <div class="log-detail-content" id="detail-notes">
+                        No additional notes provided.
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="markAsReadBtn">
+                    <i class="fas fa-check-circle me-1"></i> Mark as Read
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+        // Initialize DataTable
+        const dataTable = $('#logsTable').DataTable({
+            dom: '<"top"lf>rt<"bottom"ip>',
+            pageLength: 25,
+            lengthMenu: [10, 25, 50, 100],
+            order: [[1, 'desc']], // Sort by received date descending
+            language: {
+                search: "<i class='fas fa-search me-2'></i> Search:",
+                lengthMenu: "Show _MENU_ entries",
+                info: "Showing _START_ to _END_ of _TOTAL_ entries",
+                paginate: {
+                    first: "<i class='fas fa-angle-double-left'></i>",
+                    last: "<i class='fas fa-angle-double-right'></i>",
+                    next: "<i class='fas fa-angle-right'></i>",
+                    previous: "<i class='fas fa-angle-left'></i>"
+                },
+                zeroRecords: "No matching records found"
+            },
+            responsive: true,
+            drawCallback: function() {
+                // Update filtered count
+                $('#filteredCount').text(this.api().page.info().recordsDisplay);
+            },
+            columnDefs: [
+                { targets: [3], searchable: true } // Make sure level column is searchable
+            ]
+        });
+
+        // Initialize modal
+        const logDetailModal = new bootstrap.Modal(document.getElementById('logDetailModal'));
+
+        // Sample data - in a real app, this would come from an API
+        const sampleLogs = [
+            {
+                id: 'LOG-1001',
+                received: '2023-05-15 14:30:22',
+                sender: 'admin@example.com',
+                level: 'ERROR',
+                originalDate: '2023-05-15 14:25:10',
+                message: 'Database connection failed: Connection timed out after 30000ms',
+                notes: 'Please investigate this immediately. The system retried 3 times but failed to connect.',
+                status: 'unread'
+            },
+            {
+                id: 'LOG-1002',
+                received: '2023-05-14 09:15:45',
+                sender: 'admin@example.com',
+                level: 'WARNING',
+                originalDate: '2023-05-14 09:10:30',
+                message: 'High memory usage detected on server node-1 (85% utilization)',
+                notes: 'This seems to be happening during peak hours. Consider scaling up.',
+                status: 'read'
+            },
+            {
+                id: 'LOG-1003',
+                received: '2023-05-13 16:45:12',
+                sender: 'sysadmin@example.com',
+                level: 'INFO',
+                originalDate: '2023-05-13 16:40:05',
+                message: 'Scheduled maintenance completed successfully',
+                notes: 'All systems are back online after the maintenance window.',
+                status: 'read'
+            },
+            {
+                id: 'LOG-1004',
+                received: '2023-05-12 22:10:33',
+                sender: 'security@example.com',
+                level: 'CRITICAL',
+                originalDate: '2023-05-12 22:05:18',
+                message: 'Security alert: Multiple failed login attempts for user admin (IP: 192.168.1.105)',
+                notes: 'Account has been temporarily locked. Please review and contact security team if this was not you.',
+                status: 'unread'
+            },
+            {
+                id: 'LOG-1005',
+                received: '2023-05-11 11:20:15',
+                sender: 'monitoring@example.com',
+                level: 'DEBUG',
+                originalDate: '2023-05-11 11:15:00',
+                message: 'API response time exceeded threshold (1200ms) for endpoint /api/users',
+                notes: 'This might be related to the recent feature deployment.',
+                status: 'read'
+            }
+        ];
+
+        // Function to load data into the table
+        function loadLogs(logs) {
+            dataTable.clear();
+            
+            logs.forEach(log => {
+                const statusBadge = log.status === 'unread' 
+                    ? '<span class="badge bg-danger">Unread</span>'
+                    : '<span class="badge bg-success">Read</span>';
+                
+                const levelBadgeClass = `badge-${log.level}`;
+                const levelBadge = `<span class="badge ${levelBadgeClass}">${log.level}</span>`;
+                
+                const messagePreview = log.message.length > 50 
+                    ? log.message.substring(0, 50) + '...' 
+                    : log.message;
+                
+                dataTable.row.add([
+                    log.id,
+                    moment(log.received).format('YYYY-MM-DD HH:mm'),
+                    log.sender,
+                    levelBadge,
+                    messagePreview,
+                    `<button class="btn btn-sm btn-outline-primary view-log-btn" data-id="${log.id}">
+                        <i class="fas fa-eye me-1"></i> View
+                    </button>`
+                ]).draw(false);
+            });
+            
+            // Update stats
+            updateStats(logs);
+        }
+
+        // Function to update statistics
+        function updateStats(logs) {
+            $('#totalLogsCount').text(logs.length);
+            $('#criticalLogsCount').text(logs.filter(log => log.level === 'CRITICAL').length);
+            $('#viewedLogsCount').text(logs.filter(log => log.status === 'read').length);
+            
+            const recentThreshold = moment().subtract(7, 'days');
+            $('#recentLogsCount').text(
+                logs.filter(log => moment(log.received).isAfter(recentThreshold)).length
+            );
+            
+            // Update notification badge
+            const unreadCount = logs.filter(log => log.status === 'unread').length;
+            if (unreadCount > 0) {
+                $('#newLogsBadge').text(unreadCount).show();
+            } else {
+                $('#newLogsBadge').hide();
+            }
+        }
+
+        // Filter buttons functionality
+        $('.filter-buttons button').on('click', function() {
+            $('.filter-buttons button').removeClass('active');
+            $(this).addClass('active');
+
+            const level = $(this).data('level');
+            if (level === 'all') {
+                dataTable.columns(3).search('').draw();
+            } else {
+                dataTable.columns(3).search('^' + level + '$', true, false).draw();
+            }
+        });
+
+        // Status filter
+        $('#statusFilter').change(function() {
+            const status = $(this).val();
+            // In a real app, you would filter the data source
+            // For this demo, we're just showing all data
+        });
+
+        // Time filter
+        $('#timeFilter').change(function() {
+            const timeRange = $(this).val();
+            // In a real app, you would filter the data source
+            // For this demo, we're just showing all data
+        });
+
+        // View log button
+        $(document).on('click', '.view-log-btn', function() {
+            const logId = $(this).data('id');
+            const log = sampleLogs.find(l => l.id === logId);
+            
+            if (log) {
+                // Populate modal
+                $('#detail-log-id').text(log.id);
+                $('#detail-received').text(moment(log.received).format('YYYY-MM-DD HH:mm:ss'));
+                $('#detail-sender').text(log.sender);
+                $('#detail-status').text(log.status === 'unread' ? 'Unread' : 'Read')
+                    .removeClass('bg-danger bg-success')
+                    .addClass(log.status === 'unread' ? 'bg-danger' : 'bg-success');
+                
+                $('#detail-level').text(log.level)
+                    .removeClass().addClass('badge badge-' + log.level);
+                
+                $('#detail-original-date').text(log.originalDate);
+                $('#detail-message').text(log.message);
+                
+                if (log.notes) {
+                    $('#detail-notes').text(log.notes);
+                    $('#detail-notes-container').show();
+                } else {
+                    $('#detail-notes-container').hide();
+                }
+                
+                // Show modal
+                logDetailModal.show();
+                
+                // If log is unread, update the mark as read button
+                if (log.status === 'unread') {
+                    $('#markAsReadBtn').show();
+                } else {
+                    $('#markAsReadBtn').hide();
+                }
+            }
+        });
+
+        // Mark as read button
+        $('#markAsReadBtn').click(function() {
+            const logId = $('#detail-log-id').text();
+            const logIndex = sampleLogs.findIndex(l => l.id === logId);
+            
+            if (logIndex !== -1) {
+                // Update status
+                sampleLogs[logIndex].status = 'read';
+                
+                // Update UI
+                $('#detail-status').text('Read').removeClass('bg-danger').addClass('bg-success');
+                $(this).hide();
+                
+                // Reload data to reflect changes
+                loadLogs(sampleLogs);
+                
+                // Show success message
+                alert('Log marked as read successfully!');
+            }
+        });
+
+        // Refresh button
+        $('#refreshBtn').click(function() {
+            // Show loading state
+            $(this).prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Refreshing...');
+            
+            // Simulate API call delay
+            setTimeout(() => {
+                // In a real app, you would fetch fresh data from the server
+                loadLogs(sampleLogs);
+                
+                // Reset button
+                $(this).prop('disabled', false).html('<i class="fas fa-sync-alt me-1"></i> Refresh');
+                
+                // Hide notification badge after refresh
+                $('#newLogsBadge').hide();
+            }, 1000);
+        });
+
+        // Initial load
+        loadLogs(sampleLogs);
+    });
+</script>
+</body>
+</html>
